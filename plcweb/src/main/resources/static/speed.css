@@ -1,0 +1,124 @@
+/* --- CẤU HÌNH CHUNG --- */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+body { background: #dcdcdc; height: 100vh; width: 100vw; overflow: hidden; }
+.app-wrapper { display: flex; height: 100%; width: 100%; }
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 230px; background: #2c3e50; height: 100vh; padding-top: 20px;
+    position: fixed; top: 0; left: 0; z-index: 10; border-right: 1px solid #1a252f;
+}
+.sidebar-header { padding: 0 20px 20px 20px; text-align: center; border-bottom: 1px solid #444; }
+.sidebar-header .logo { color: white; margin: 0; }
+.menu { list-style: none; padding-top: 10px; }
+.menu li a {
+    display: block; padding: 15px 20px; color: #bdc3c7; text-decoration: none;
+    font-size: 16px; transition: 0.3s; border-left: 5px solid transparent;
+}
+.menu li a:hover { background: #34495e; color: white; }
+.menu li.active a { background: #34495e; color: #00b050; border-left: 5px solid #00b050; font-weight: bold; }
+
+/* --- MAIN CONTENT --- */
+.main-content { margin-left: 230px; width: calc(100% - 230px); height: 100vh; background: #cfcfcf; padding: 0; overflow: hidden; }
+
+/* --- HMI PANEL --- */
+.hmi-panel { width: 100%; height: 100%; background: white; border-left: 2px solid #666; display: flex; flex-direction: column; }
+
+/* HEADER */
+.header {
+    display: flex; align-items: center; background: white; border-bottom: 4px solid #cc0000;
+    padding: 0 20px; height: 75px; flex-shrink: 0;
+}
+.logo-area { margin-right: 20px; display: flex; align-items: center; }
+.logo-img { height: 55px; width: auto; }
+.title-area { flex-grow: 1; text-align: center; }
+.title-area h1 { color: #00b050; font-weight: 900; text-transform: uppercase; font-size: clamp(22px, 2.5vw, 34px); }
+
+/* --- DASHBOARD --- */
+.top-dashboard {
+    display: grid; grid-template-columns: 40% 40% 20%;
+    border-bottom: 3px solid black; min-height: 200px; flex-shrink: 0;
+}
+.box-control, .box-pid { border-right: 3px solid black; display: flex; flex-direction: column; }
+.box-header { background: #f2f2f2; text-align: center; padding: 10px; font-weight: bold; font-size: 1.2rem; border-bottom: 3px solid black; }
+.box-body { padding: 15px 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+/* INPUTS */
+.input-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 1.2rem; font-weight: bold; }
+.green-input {
+    width: 45%; height: 40px; border: 4px solid #00b050;
+    font-size: 1.2rem; font-weight: bold; padding-left: 5px; outline: none;
+}
+/* Nền màu xanh nhạt cho ô hiển thị (readonly) */
+.green-input:read-only, .green-input-small:read-only {
+    background-color: #e8f5e9; /* Màu xanh rất nhạt */
+    color: #006400; /* Chữ xanh đậm */
+}
+
+/* BUTTONS */
+.btn-group { display: flex; justify-content: space-between; margin-top: 10px; }
+.btn {
+    width: 30%; height: 45px; font-weight: bold; font-size: 1.1rem;
+    border: 3px solid #333; cursor: pointer; text-transform: uppercase;
+}
+.start { background: #00e600; }
+.stop { background: #ff3333; color: white; }
+.reset { background: #ffe600; }
+.btn:active { transform: scale(0.95); }
+
+/* PID STYLES */
+.info-row { display: flex; justify-content: space-around; margin-bottom: 20px; font-size: 1.2rem; }
+.pid-container { display: flex; justify-content: space-between; background: #f4f4f4; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+.pid-item { display: flex; flex-direction: column; align-items: center; }
+.pid-item label { font-weight: bold; margin-bottom: 5px; }
+.green-input-small {
+    width: 80px; height: 35px; border: 3px solid #00b050;
+    font-size: 1.1rem; font-weight: bold; text-align: center; outline: none;
+}
+
+/* TIME BOX */
+.box-time { display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; font-size: 1.3rem; background: #f9f9f9; line-height: 1.5; color: #cc0000; }
+
+/* --- CHART --- */
+.chart-section { padding: 10px 20px 10px 40px; background: white; display: flex; flex-direction: column; flex-grow: 1; }
+.chart-legend { text-align: right; font-weight: bold; margin-bottom: 5px; font-size: 14px; flex-shrink: 0; }
+.chart-container { display: flex; flex-grow: 1; height: 100%; padding-bottom: 5px; }
+.y-axis { display: flex; flex-direction: column; justify-content: space-between; padding-right: 10px; font-weight: bold; font-size: 14px; text-align: right; width: 50px; margin: -8px 0; }
+.chart-plot { flex-grow: 1; background: #00b0f0; border: 1px solid black; position: relative; width: 100%; height: 100%; }
+.grid-line { position: absolute; top: 50%; width: 100%; height: 1px; background: black; }
+.grid-line-vert { position: absolute; left: 50%; height: 100%; width: 1px; background: black; }
+.x-axis { display: flex; justify-content: space-between; padding-left: 50px; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+
+/* COLORS */
+.text-red { color: #cc0000; font-weight: bold; }
+.text-green { color: #00b050; font-weight: bold; }
+.text-yellow { color: #ffcc00; font-weight: bold; text-shadow: 1px 1px 0 #333; /* Viền chữ nhẹ cho dễ đọc */ }
+.text-center { text-align: center; }
+.logout-container {
+    padding: 20px;
+    background-color: #233240; /* Màu nền tối hơn sidebar */
+    border-top: 1px solid #444;
+    flex-shrink: 0; /* Cố định không bị co */
+}
+
+.logout-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #c0392b; /* Màu đỏ báo hiệu thoát */
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 4px;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.logout-btn:hover { 
+    background-color: #e74c3c; /* Sáng lên khi di chuột */
+}
+
+.logout-btn i {
+    margin-right: 8px; /* Khoảng cách giữa icon và chữ */
+}

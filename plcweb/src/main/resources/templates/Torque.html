@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>EIU - Torque Control </title>
+    <link rel="stylesheet" th:href="@{/torque.css}">
+    <style>
+        /* CSS cho nút SEND mới */
+        .btn-send {
+            width: 100%; height: 45px; margin-top: 15px;
+            background-color: #0055aa; color: white;
+            font-weight: bold; font-size: 16px;
+            border: 2px solid #003366; border-radius: 5px;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .btn-send:hover { background-color: #004488; }
+        .btn-send:active { transform: scale(0.98); }
+
+        /* Nút Reset Zoom */
+        #resetZoomBtn {
+            position: absolute; top: 10px; right: 50px; z-index: 100;
+            padding: 5px 15px; background-color: #cc0000; color: white;
+            border: 2px solid white; border-radius: 20px; font-weight: bold;
+            cursor: pointer; display: none;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <div class="app-wrapper">
+
+        <div class="sidebar">
+            <div class="user-profile">
+                <div class="avatar-circle"><i class="fas fa-user"></i></div>
+                <div class="user-info"><span class="greeting">Hi,</span><span class="username" th:text="${username}">Guest</span></div>
+            </div>
+            <div class="sidebar-header"><h2 class="logo">MENU</h2></div>
+            <ul class="menu">
+                <li><a th:href="@{/Dashboard}" class="menu-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a th:href="@{/speed-monitoring}" class="menu-item"><i class="fas fa-chart-line"></i> Speed Monitoring</a></li>
+                <li class="active"><a th:href="@{/torque}" class="menu-item"><i class="fas fa-cogs"></i> Torque Control</a></li>
+                <li><a th:href="@{/recipes}" class="menu-item"><i class="fas fa-clipboard-list"></i> Recipes</a></li>
+                <li><a th:href="@{/reports}" class="menu-item"><i class="fas fa-file-alt"></i> Reports</a></li>
+                <li><a th:href="@{/invt}" class="menu-item"><i class="fas fa-sliders-h"></i> INVT Parameters</a></li>
+                <li><a href="/IO-status" class="menu-item"><i class="fas fa-network-wired"></i> I/O Status</a></li>
+            </ul>
+            <div class="logout-container"><a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> LOG OUT</a></div>
+        </div>
+
+        <div class="main-content">
+            <div class="hmi-panel">
+                <div class="header">
+                    <div class="logo-area"><img th:src="@{/images/Logo_EIU.png}" alt="EIU" class="logo-img"></div>
+                    <div class="title-area"><h1>DIGITALIZING LATHE MACHINE</h1></div>
+                </div>
+
+                <div class="top-dashboard">
+                    
+                    <div class="box-torque">
+                        <div class="box-header text-red">Spindle Torque Control</div>
+                        <div class="box-body">
+                            <div class="input-row">
+                                <label>Set Torque (Nm):</label>
+                                <input type="number" id="input-setpoint" class="green-input" placeholder="0.0">
+                            </div>
+                            <div class="input-row">
+                                <label>Actual Torque:</label>
+                                <input type="text" id="actual-torque" value="0.0" class="green-input text-center" readonly>
+                            </div>
+
+                            <button class="btn-send" onclick="sendTorqueCommand()">
+                                <i class="fas fa-paper-plane"></i> SEND Torque
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="box-stats">
+                        <div class="box-header text-red">Machine Parameters</div>
+                        <div class="box-body">
+                            <div class="input-row">
+                                <label>Spindle Power:</label>
+                                <input type="text" id="val-power" value="0 W" class="green-input text-center" readonly>
+                            </div>
+                            <div class="input-row">
+                                <label>Spindle Temperature:</label>
+                                <input type="text" id="val-temp" value="0 °C" class="green-input text-center" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="box-time text-red">
+                        <div>EIU <span id="clock-time">00:00:00</span></div>
+                        <div><span id="clock-ampm">AM</span></div>
+                        <div id="clock-date">01/01/2025</div>
+                    </div>
+
+                </div>
+
+                <div class="chart-section">
+                    <div class="chart-legend">
+                        <span class="text-green">■ Torque</span>
+                        <span class="text-red">■ Actual Torque</span>
+                        <small style="color: gray; font-style: italic; margin-left: 10px;">(Scroll to view history)</small>
+                    </div>
+                    
+                    <div class="chart-container" style="position: relative;">
+                        <canvas id="torqueChart"></canvas>
+                        <button id="resetZoomBtn" onclick="returnToLiveView()">▶ Go to live view </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+    <script>
+    // --- 1. BIẾN TOÀN CỤC ---
+    let isLiveMode = true;
+
+    // --- 2. ĐỒNG HỒ ---
+    function updateClock() {
+        const now = new Date();
+        let h = now.getHours(), ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+        document.getElementById('clock-time').innerText = h + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('clock-ampm').innerText = ampm;
+        document.getElementById('clock-date').innerText = now.toLocaleDateString('en-GB');
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    // --- 3. CẤU HÌNH BIỂU ĐỒ ---
+    const ctx = document.getElementById('torqueChart').getContext('2d');
+    const gradientBg = ctx.createLinearGradient(0, 0, 0, 400);
+    gradientBg.addColorStop(0, 'rgba(0, 176, 240, 0.5)');
+    gradientBg.addColorStop(1, 'rgba(0, 176, 240, 0.05)');
+
+    const torqueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [], 
+            datasets: [
+                { label: 'Setpoint', data: [], borderColor: '#00b050', borderWidth: 3, pointRadius: 0, tension: 0, fill: false },
+                { label: 'Actual Torque', data: [], borderColor: '#cc0000', backgroundColor: gradientBg, borderWidth: 3, pointRadius: 0, tension: 0.4, fill: true }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, animation: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { title: { display: true, text: 'Time', color: 'black', font: {weight: 'bold'} }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }, grid: { color: 'rgba(0,0,0,0.1)' } },
+                y: { title: { display: true, text: 'Torque (Nm)', color: 'black', font: {weight: 'bold'} }, min: 0, max: 25, grid: { color: 'rgba(0,0,0,0.2)' } }
+            },
+            plugins: { 
+                legend: { display: false },
+                zoom: {
+                    pan: { enabled: true, mode: 'x', onPan: function() { isLiveMode = false; document.getElementById('resetZoomBtn').style.display = 'block'; } },
+                    zoom: { wheel: { enabled: false }, pinch: { enabled: true }, mode: 'x' },
+                    limits: { x: { min: 'original', max: 'original' } }
+                }
+            }
+        }
+    });
+
+    function returnToLiveView() {
+        isLiveMode = true;
+        torqueChart.resetZoom();
+        document.getElementById('resetZoomBtn').style.display = 'none';
+    }
+
+    // --- 4. GỬI LỆNH XUỐNG KEPWARE (CHỈ 1 NÚT SEND) ---
+    function sendTorqueCommand() {
+        // Lấy giá trị từ ô input
+        const val = document.getElementById('input-setpoint').value;
+
+        if (!val) {
+            Swal.fire({icon: 'warning', title: 'Missing Value', text: 'Please set the input Torque!'});
+            return;
+        }
+
+        // Gọi API Java để gửi lệnh SET_TORQUE
+        fetch(`/api/control?cmd=SET_TORQUE&val=${val}`, { method: 'POST' })
+            .then(res => res.text())
+            .then(data => {
+                if(data === "OK") {
+                    Swal.fire({
+                        icon: 'success', 
+                        title: 'Sent Successfully', 
+                        text: `Sent Torque: ${val} Nm to PLC`,
+                        timer: 1500, showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({icon: 'error', title: 'Error', text: data});
+                }
+            })
+            .catch(err => console.error(err));
+    }
+
+    // --- 5. LẤY DỮ LIỆU THẬT & VẼ BIỂU ĐỒ (1s/lần) ---
+    function updateRealTimeData() {
+        fetch('/api/machine-data')
+            .then(response => response.json())
+            .then(data => {
+                const now = new Date();
+                const timeLabel = now.toLocaleTimeString('vi-VN', { hour12: false });
+
+                // Lấy dữ liệu thật từ PLC (Server trả về)
+                // Lưu ý: Tên Tag phải khớp với MachineData.java
+                const setpoint = data['Momen HMI'] || 0;
+                const actualTorque = data['Output Torque'] || 0;
+                const power = parseFloat(data['Output Power'] || 0).toFixed(1);
+                const temp = parseFloat(data['Spindle Temperature'] || 0).toFixed(1);
+
+                // --- Cập nhật số hiển thị ---
+                document.getElementById('actual-torque').value = parseFloat(actualTorque).toFixed(2);
+                document.getElementById('val-power').value = power + " W";
+                document.getElementById('val-temp').value = temp + " °C";
+                // --- SYNC SET TORQUE TỪ PLC LÊN Ô INPUT ---
+            const inputSetTorque = document.getElementById('input-setpoint');
+
+                // Chỉ cập nhật khi user KHÔNG đang gõ
+            if (document.activeElement !== inputSetTorque) {
+             inputSetTorque.value = parseFloat(setpoint).toFixed(2);
+}
+
+
+                // --- Vẽ biểu đồ ---
+                if (torqueChart.data.labels.length > 600) {
+                    torqueChart.data.labels.shift();
+                    torqueChart.data.datasets.forEach(ds => ds.data.shift());
+                }
+
+                torqueChart.data.labels.push(timeLabel);
+                torqueChart.data.datasets[0].data.push(setpoint);     // Đường xanh (Setpoint)
+                torqueChart.data.datasets[1].data.push(actualTorque); // Đường đỏ (Thực tế)
+                
+                if (isLiveMode) {
+                    torqueChart.resetZoom();
+                    torqueChart.update('none');
+                } else {
+                    torqueChart.update('none');
+                }
+            })
+            .catch(error => console.error('Error fetching data:', error));
+            
+    }
+
+    // Chạy vòng lặp cập nhật
+    setInterval(updateRealTimeData, 1000);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+/* =========================================
+   1. CẤU HÌNH CHUNG
+   ========================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+
+body { 
+    background: #dcdcdc; 
+    height: 100vh; 
+    width: 100vw; 
+    overflow: hidden; 
+}
+
+.app-wrapper { display: flex; height: 100%; width: 100%; }
+
+/* =========================================
+   2. SIDEBAR & USER PROFILE (ĐÃ CHỈNH SỬA CHO ĐỒNG BỘ)
+   ========================================= */
+.sidebar { 
+    width: 230px; 
+    background: #2c3e50; 
+    height: 100vh; 
+    
+    /* SỬA: Padding 0 để User Profile nằm sát trên */
+    padding-top: 0; 
+    
+    position: fixed; 
+    border-right: 1px solid #1a252f; 
+    z-index: 1000; 
+    
+    /* SỬA: Flexbox để xếp dọc và đẩy logout xuống đáy */
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- PHẦN HI USER (MỚI THÊM) --- */
+.user-profile {
+    display: flex;
+    align-items: center;
+    padding: 20px 15px;
+    background-color: #233240; /* Nền tối hơn sidebar */
+    border-bottom: 1px solid #444;
+    flex-shrink: 0;
+}
+
+.avatar-circle {
+    width: 45px; height: 45px;
+    background-color: #ecf0f1;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.avatar-circle i { font-size: 24px; color: #2c3e50; }
+
+.user-info { display: flex; flex-direction: column; }
+
+.greeting {
+    font-size: 13px; color: #bdc3c7;
+    font-style: italic; margin-bottom: 2px;
+}
+
+.username {
+    font-size: 16px; font-weight: 900;
+    color: #00b050; /* Màu xanh lá EIU */
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* --- HEADER CỦA MENU --- */
+.sidebar-header { 
+    padding: 15px 0; 
+    text-align: center; 
+    border-bottom: 1px solid #444; 
+    flex-shrink: 0; 
+}
+.sidebar-header .logo { color: white; margin: 0; font-size: 24px; font-weight: bold; }
+
+/* --- DANH SÁCH MENU --- */
+.menu { 
+    list-style: none; 
+    padding-top: 10px; 
+    
+    /* SỬA: Đẩy nút logout xuống đáy */
+    flex-grow: 1; 
+    overflow-y: auto; 
+}
+
+.menu li a { 
+    display: block; padding: 15px 20px; 
+    color: #bdc3c7; text-decoration: none; 
+    font-size: 16px; transition: 0.3s; 
+    border-left: 5px solid transparent; 
+}
+.menu li a:hover { background: #34495e; color: white; }
+.menu li.active a { 
+    background: #34495e; color: #00b050; 
+    border-left: 5px solid #00b050; font-weight: bold; 
+}
+
+/* --- NÚT LOGOUT --- */
+.logout-container {
+    padding: 20px;
+    background-color: #233240;
+    border-top: 1px solid #444;
+    flex-shrink: 0;
+}
+
+.logout-btn {
+    display: block; width: 100%; padding: 10px;
+    background-color: #c0392b; color: white;
+    text-align: center; text-decoration: none;
+    font-weight: bold; border-radius: 4px;
+    transition: 0.3s; font-size: 14px;
+}
+
+.logout-btn:hover { background-color: #e74c3c; }
+.logout-btn i { margin-right: 8px; }
+
+
+/* =========================================
+   3. MAIN CONTENT & HEADER (GIỮ NGUYÊN)
+   ========================================= */
+.main-content { 
+    margin-left: 230px; 
+    width: calc(100% - 230px); 
+    height: 100vh; 
+    background: #cfcfcf; 
+    padding: 0; 
+    overflow: hidden; 
+    display: flex;
+    flex-direction: column;
+}
+
+.hmi-panel { 
+    width: 100%; height: 100%; 
+    background: white; 
+    border-left: 2px solid #666; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+/* Header */
+.header { 
+    display: flex; align-items: center; 
+    background: white; border-bottom: 4px solid #cc0000; 
+    padding: 0 20px; height: 80px; flex-shrink: 0; 
+    justify-content: space-between; 
+}
+
+.logo-area { display: flex; align-items: center; width: 150px; }
+.logo-img { height: 55px; width: auto; }
+
+.title-area { flex-grow: 1; text-align: center; }
+.title-area h1 { 
+    color: #00b050; font-weight: 900; 
+    text-transform: uppercase; font-size: 28px; margin-bottom: 5px; 
+}
+.sub-title { margin: 0; font-size: 20px; font-weight: bold; }
+.text-red { color: #cc0000; font-weight: bold; }
+
+/* Đồng hồ góc phải (Đồng bộ format mới) */
+.header-time {
+    display: flex; flex-direction: column; 
+    justify-content: center; align-items: center;
+    font-family: 'Arial', sans-serif; 
+    font-weight: 900; font-size: 1.2rem;
+    color: #cc0000; line-height: 1.2; 
+    width: 160px; text-align: center;
+}
+#clock-line-1 { font-size: 24px; }
+#clock-line-2 { font-size: 20px; margin: 2px 0; }
+#clock-line-3 { font-size: 24px; }
+
+
+/* =========================================
+   4. RECIPE LAYOUT (GIỮ NGUYÊN)
+   ========================================= */
+.recipe-container {
+    flex-grow: 1;
+    display: flex; padding: 15px; gap: 15px;
+    background-color: #f0f0f0; overflow: hidden;
+}
+
+/* --- CỘT TRÁI: DANH SÁCH --- */
+.recipe-list-panel {
+    width: 30%; background: white;
+    border: 2px solid #666; display: flex; flex-direction: column;
+}
+
+.panel-header {
+    background: #e0e0e0; color: #cc0000;
+    padding: 15px; text-align: center; font-weight: 900;
+    font-size: 1.1rem; border-bottom: 2px solid #666;
+    text-transform: uppercase;
+}
+
+.list-wrapper { flex-grow: 1; overflow-y: auto; padding: 10px; }
+
+.recipe-item {
+    padding: 15px; margin-bottom: 10px;
+    background: #f9f9f9; border: 1px solid #ccc;
+    font-weight: bold; cursor: pointer;
+    transition: 0.2s; font-size: 1.1rem;
+}
+.recipe-item:hover { background: #dfffe0; border-color: #00b050; }
+.recipe-item.active {
+    background: #00b050; color: white;
+    border-color: #006400; box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+
+.list-actions {
+    padding: 15px; border-top: 2px solid #666; text-align: center;
+}
+.btn-new {
+    width: 100%; height: 45px; background: #fff;
+    border: 2px dashed #00b050; color: #00b050;
+    font-weight: bold; font-size: 1rem; cursor: pointer;
+}
+.btn-new:hover { background: #f0fff4; }
+
+/* --- CỘT PHẢI: CHI TIẾT --- */
+.recipe-detail-panel {
+    width: 70%; background: white;
+    border: 2px solid #666; display: flex; flex-direction: column;
+}
+
+.form-container { flex-grow: 1; padding: 30px; overflow-y: auto; }
+.form-row { display: flex; gap: 30px; margin-bottom: 25px; }
+.form-group { flex: 1; display: flex; flex-direction: column; }
+.full-width { width: 100%; margin-bottom: 25px; }
+
+label { font-weight: bold; margin-bottom: 8px; font-size: 1.1rem; color: #333; }
+
+.hmi-input {
+    height: 50px; border: 3px solid #00b050; padding: 0 15px;
+    font-size: 1.3rem; font-weight: bold; color: #333;
+    outline: none; border-radius: 0;
+}
+.hmi-input:focus { background-color: #fafffb; border-color: #008037; }
+
+/* THANH NÚT BẤM */
+.control-bar {
+    padding: 20px; background: #e0e0e0;
+    border-top: 2px solid #666; display: flex;
+    justify-content: space-between;
+}
+.left-btns { display: flex; gap: 10px; }
+
+.btn-save, .btn-delete, .btn-load {
+    height: 55px; padding: 0 30px;
+    font-weight: 900; font-size: 1.1rem;
+    color: white; border: 3px solid #333;
+    cursor: pointer; box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+    text-transform: uppercase;
+}
+.btn-save { background: #007bff; }
+.btn-delete { background: #dc3545; }
+.btn-load { background: #00b050; font-size: 1.3rem; }
+
+.btn-save:active, .btn-delete:active, .btn-load:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+}

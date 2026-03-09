@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>EIU - Production Reports</title>
+    <link rel="stylesheet" th:href="@{/reports.css}" />
+    
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        .flatpickr-calendar { border: 2px solid #444 !important; box-shadow: 5px 5px 10px rgba(0,0,0,0.2) !important; }
+        .flatpickr-day.selected { background: #00b050 !important; border-color: #00b050 !important; }
+        .menu-item i { margin-right: 10px; width: 25px; text-align: center; }
+        .badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.8em; color: white; min-width: 80px; display: inline-block; text-align: center; }
+        .status-run { background-color: #00b050; box-shadow: 0 0 5px #00b050; } 
+        .status-stop { background-color: #555; }
+
+        /* Style cho nút bấm chế độ */
+        .btn-mode {
+            padding: 8px 15px; border: none; cursor: pointer; font-weight: bold; color: white; margin-right: 5px; border-radius: 4px;
+        }
+        .btn-live { background-color: #00b050; } 
+        .btn-live:hover { background-color: #009040; }
+        
+        .btn-manual { background-color: #ff9800; } 
+        .btn-manual:hover { background-color: #e68900; }
+
+        .btn-disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="app-wrapper">
+        <div class="sidebar">
+            <div class="user-profile">
+                <div class="avatar-circle"><i class="fas fa-user"></i></div>
+                <div class="user-info">
+                    <span class="greeting">Hi,</span>
+                    <span class="username" th:text="${username}">Guest</span>
+                </div>
+            </div>
+            <div class="sidebar-header"><h2 class="logo">MENU</h2></div>
+            <ul class="menu">
+                <li><a th:href="@{/Dashboard}" class="menu-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a th:href="@{/speed-monitoring}" class="menu-item"><i class="fas fa-chart-line"></i> Speed Monitoring</a></li>
+                <li><a th:href="@{/torque}" class="menu-item"><i class="fas fa-cogs"></i> Torque Control</a></li>
+                <li><a th:href="@{/recipes}" class="menu-item"><i class="fas fa-clipboard-list"></i> Recipes</a></li>
+                <li class="active"><a th:href="@{/reports}" class="menu-item"><i class="fas fa-file-alt"></i> Reports</a></li>
+                <li><a th:href="@{/invt}" class="menu-item"><i class="fas fa-sliders-h"></i> INVT Parameters</a></li>
+                <li><a href="/IO-status" class="menu-item"><i class="fas fa-network-wired"></i> I/O Status</a></li>
+            </ul>
+             <div class="logout-container">
+                <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> LOG OUT</a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="hmi-panel">
+                <div class="header">
+                    <div class="logo-area"><img th:src="@{/images/Logo_EIU.png}" alt="EIU" class="logo-img" /></div>
+                    <div class="title-area">
+                        <h1>DIGITALIZING LATHE MACHINE</h1>
+                        <h2 class="sub-title text-red">PRODUCTION DATA REPORTS</h2>
+                    </div>
+                    <div class="header-time text-red">
+                        <div>EIU <span id="clock-time">00:00:00</span></div>
+                        <div><span id="clock-ampm">AM</span></div>
+                        <div id="clock-date">01/01/2025</div>
+                    </div>
+                </div>
+
+                <div class="report-container">
+                    
+                    <div class="filter-bar">
+                        <div class="filter-group">
+                            <label>FROM TIME:</label>
+                            <input type="text" id="fromDate" class="hmi-input" placeholder="Select Date..." />
+                        </div>
+                        <div class="filter-group">
+                            <label>TO TIME:</label>
+                            <input type="text" id="toDate" class="hmi-input" placeholder="Select Date..." />
+                        </div>
+                        
+                        <div class="action-buttons" style="margin-left: auto;">
+                            <button id="btnLive" class="btn-mode btn-live" onclick="startLiveMode()">
+                                <i class="fas fa-sync-alt fa-spin"></i> LIVE MODE
+                            </button>
+                            
+                            <button id="btnManual" class="btn-mode btn-manual" onclick="enableManualMode()">
+                                <i class="fas fa-history"></i> MANUAL SEARCH
+                            </button>
+
+                            <button id="btnSearch" class="btn-search" onclick="manualSearch()" style="display: none;">
+                                <i class="fas fa-search"></i> GET DATA
+                            </button>
+
+                            <button class="btn-excel" onclick="exportToExcel()">
+                                <i class="fas fa-file-excel"></i> EXPORT
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="data-table" id="reportTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">ID</th>
+                                    <th>Timestamp</th>
+                                    <th>Product Code</th>
+                                    <th>Speed (RPM)</th>
+                                    <th>Torque (Nm)</th>
+                                    <th>Power (%)</th> 
+                                    <th>Voltage (V)</th>
+                                    <th>Current (A)</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination-bar">
+                        <span style="margin-right: 20px; color: #aaa; font-style: italic;" id="lastUpdateTxt"></span>
+                        <span>Total: <b id="rowCount">0</b> records found.</span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. CẤU HÌNH LỊCH (ĐÃ SỬA: minuteIncrement: 1)
+        const config = {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i", 
+            time_24hr: true,
+            minuteIncrement: 1, // <--- SỬA Ở ĐÂY: Cho phép chọn từng phút một
+            defaultDate: new Date()
+        };
+        
+        const fpToDate = flatpickr("#toDate", config); 
+        const yesterday = new Date();
+        yesterday.setHours(yesterday.getHours() - 24);
+        const fpFromDate = flatpickr("#fromDate", { ...config, defaultDate: yesterday });
+
+        // 2. ĐỒNG HỒ
+        function updateClock() {
+            const now = new Date();
+            let h = now.getHours(), ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; 
+            document.getElementById('clock-time').innerText = h + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock-ampm').innerText = ampm;
+            document.getElementById('clock-date').innerText = now.toLocaleDateString('en-GB');
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        // 3. HÀM FORMAT NGÀY
+        function formatDateForJava(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}`;
+        }
+
+        // =========================================================
+        // 4. LOGIC CHUYỂN ĐỔI CHẾ ĐỘ
+        // =========================================================
+        let autoUpdateInterval = null;
+
+        function startLiveMode() {
+            document.getElementById("btnSearch").style.display = "none";
+            document.getElementById("btnLive").classList.remove("btn-disabled");
+            document.getElementById("btnManual").classList.add("btn-disabled");
+            
+            document.getElementById("toDate").disabled = true;
+            document.getElementById("fromDate").disabled = true;
+
+            handleLiveUpdate();
+            if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+            autoUpdateInterval = setInterval(handleLiveUpdate, 5000);
+        }
+
+        function enableManualMode() {
+            if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+
+            document.getElementById("btnSearch").style.display = "inline-block";
+            document.getElementById("btnLive").classList.add("btn-disabled");
+            document.getElementById("btnManual").classList.remove("btn-disabled");
+
+            document.getElementById("toDate").disabled = false;
+            document.getElementById("fromDate").disabled = false;
+            
+            document.getElementById('lastUpdateTxt').innerText = "Mode: Manual Search";
+        }
+
+        function handleLiveUpdate() {
+            const now = new Date();
+            const past24h = new Date();
+            past24h.setHours(now.getHours() - 24);
+
+            fpToDate.setDate(now); 
+            fpFromDate.setDate(past24h);
+
+            const strFrom = formatDateForJava(past24h);
+            const strTo = formatDateForJava(now);
+            loadRealData(strFrom, strTo, true);
+        }
+
+        function manualSearch() {
+            const from = document.getElementById("fromDate").value;
+            const to = document.getElementById("toDate").value;
+            loadRealData(from, to, false);
+        }
+
+        // =========================================================
+        // 5. HÀM TẢI DỮ LIỆU
+        // =========================================================
+        function loadRealData(fromStr, toStr, isAutoMode) {
+            const tbody = document.getElementById('tableBody');
+
+            if (!isAutoMode) {
+                tbody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>Loading data...</td></tr>";
+            }
+
+            fetch(`/api/reports/search?from=${fromStr}&to=${toStr}`)
+                .then(response => response.json())
+                .then(data => {
+                    tbody.innerHTML = ""; 
+                    
+                    if(isAutoMode) {
+                         const now = new Date();
+                         document.getElementById('lastUpdateTxt').innerText = "Live Update: " + now.toLocaleTimeString();
+                    }
+
+                    if (data.length === 0) {
+                        tbody.innerHTML = "<tr><td colspan='9' style='text-align:center; color:red;'>No data found.</td></tr>";
+                        document.getElementById('rowCount').innerText = 0;
+                        return;
+                    }
+
+                    data.reverse(); 
+
+                    data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        const timeStr = new Date(row.recordedAt).toLocaleString('vi-VN');
+                        
+                        const speed = Math.round(row.runSpeed || 0);
+                        const isRunning = speed > 10;
+                        const statusBadge = isRunning 
+                            ? '<span class="badge status-run">RUNNING</span>' 
+                            : '<span class="badge status-stop">STOPPED</span>';
+
+                        const product = row.productCode || "N/A";
+                        const torque = (row.outputTorque || 0).toFixed(1);
+                        const power = (row.outputPower || 0).toFixed(2);
+                        const voltage = (row.outputVoltage || 0).toFixed(1); 
+                        const current = (row.outputCurrent || 0).toFixed(1);
+
+                        tr.innerHTML = `
+                            <td>${row.id}</td>
+                            <td>${timeStr}</td>
+                            <td style="font-weight:bold; color:#0055aa">${product}</td>
+                            <td>${speed}</td>
+                            <td>${torque}</td>
+                            <td>${power}</td>
+                            <td>${voltage}</td>
+                            <td>${current}</td>
+                            <td>${statusBadge}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    document.getElementById('rowCount').innerText = data.length;
+                })
+                .catch(error => console.error("Lỗi:", error));
+        }
+
+        function exportToExcel() {
+            const table = document.getElementById("reportTable");
+            const wb = XLSX.utils.table_to_book(table, {sheet: "Data"});
+            XLSX.writeFile(wb, `Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        // CHẠY LIVE MODE MẶC ĐỊNH
+        startLiveMode();
+
+    </script>
+</body>
+</html> 

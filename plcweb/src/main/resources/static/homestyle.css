@@ -1,0 +1,244 @@
+/* --- 1. CẤU HÌNH CHUNG (Giữ nguyên) --- */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+
+body {
+    background: #dcdcdc;
+    height: 100vh; width: 100vw;
+    overflow: hidden;
+}
+
+.app-wrapper { display: flex; height: 100%; width: 100%; }
+
+/* --- 2. SIDEBAR (ĐÃ CHỈNH SỬA) --- */
+.sidebar {
+    width: 230px; 
+    background: #2c3e50;
+    height: 100vh; 
+    
+    /* SỬA: Đổi padding-top thành 0 để phần Hi User nằm sát trên cùng */
+    padding-top: 0; 
+    
+    position: fixed; top: 0; left: 0; z-index: 10;
+    border-right: 1px solid #1a252f;
+    
+    /* SỬA: Thêm Flexbox để đẩy nút Logout xuống đáy */
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- PHẦN MỚI THÊM: STYLE CHO HI USER --- */
+.user-profile {
+    display: flex;
+    align-items: center;
+    padding: 20px 15px;
+    background-color: #233240; /* Nền tối hơn sidebar cho nổi bật */
+    border-bottom: 1px solid #444;
+    flex-shrink: 0;
+}
+
+.avatar-circle {
+    width: 45px; 
+    height: 45px;
+    background-color: #ecf0f1;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.avatar-circle i {
+    font-size: 24px;
+    color: #2c3e50;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.greeting {
+    font-size: 13px;
+    color: #bdc3c7;
+    font-style: italic;
+    margin-bottom: 2px;
+}
+
+.username {
+    font-size: 16px; 
+    font-weight: 900; 
+    color: #00b050; /* Màu xanh lá EIU */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+/* --- KẾT THÚC PHẦN MỚI THÊM --- */
+
+
+.sidebar-header { padding: 15px 0; text-align: center; border-bottom: 1px solid #444; flex-shrink: 0; }
+.sidebar-header .logo { color: white; margin: 0; }
+
+.menu { 
+    list-style: none; 
+    padding-top: 10px; 
+    flex-grow: 1; /* Đẩy logout xuống đáy */
+    overflow-y: auto; 
+}
+.menu li a {
+    display: block; padding: 15px 20px;
+    color: #bdc3c7; text-decoration: none;
+    font-size: 16px; transition: 0.3s;
+    border-left: 5px solid transparent;
+}
+.menu li a:hover { background: #34495e; color: white; }
+.menu li.active a {
+    background: #34495e; color: #00b050;
+    border-left: 5px solid #00b050; font-weight: bold;
+}
+
+/* NÚT LOGOUT */
+.logout-container {
+    padding: 20px;
+    background-color: #233240;
+    border-top: 1px solid #444;
+    flex-shrink: 0;
+}
+
+.logout-btn {
+    display: block; width: 100%; padding: 10px;
+    background-color: #c0392b; color: white;
+    text-align: center; text-decoration: none;
+    font-weight: bold; border-radius: 4px;
+    transition: 0.3s; font-size: 14px;
+}
+.logout-btn:hover { background-color: #e74c3c; }
+.logout-btn i { margin-right: 8px; }
+
+
+/* --- 3. MAIN CONTENT (Giữ nguyên) --- */
+.main-content {
+    margin-left: 230px; width: calc(100% - 230px);
+    height: 100vh; background: #cfcfcf;
+    padding: 0; overflow: hidden;
+}
+
+/* --- 4. KHUNG HMI (Giữ nguyên) --- */
+.hmi-panel {
+    width: 100%; height: 100%;
+    background: white; border-left: 2px solid #666;
+    display: flex; flex-direction: column;
+}
+
+/* HEADER STYLE MỚI */
+.header {
+    display: flex; align-items: center;
+    background: white; border-bottom: 4px solid #cc0000;
+    padding: 0 15px; height: 80px;
+    flex-shrink: 0; justify-content: space-between;
+}
+
+.logo-area { display: flex; align-items: center; width: 150px; }
+.logo-img { height: 55px; width: auto; }
+
+.title-area { flex-grow: 1; text-align: center; }
+.title-area h1 {
+    color: #00b050; font-weight: 900;
+    text-transform: uppercase;
+    font-size: clamp(20px, 2.5vw, 34px); margin: 0;
+}
+
+.header-time {
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    font-weight: bold; font-size: 1.2rem;
+    color: #cc0000; line-height: 1.4;
+    width: 150px;
+}
+
+/* --- DASHBOARD BODY (Giữ nguyên) --- */
+.dashboard-body {
+    flex-grow: 1; display: flex; flex-direction: column;
+}
+
+/* HÀNG 1: METRICS */
+.metrics-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-bottom: 3px solid black;
+    height: 30%; min-height: 180px;
+}
+
+.metric-box {
+    border-right: 3px solid black;
+    display: flex; flex-direction: column;
+}
+.metric-box.last-col { border-right: none; }
+
+.box-header {
+    background: #f2f2f2; text-align: center; padding: 10px;
+    font-weight: bold; font-size: 1.3rem;
+    border-bottom: 3px solid black; flex-shrink: 0;
+}
+
+.box-content {
+    flex-grow: 1; display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    background: white;
+}
+
+.value-large { font-size: 3.5rem; font-weight: bold; }
+.unit { font-size: 1.5rem; font-weight: bold; color: #555; margin-top: 5px; }
+
+/* HÀNG 2: BOTTOM SECTION */
+.bottom-section { flex-grow: 1; display: flex; }
+
+/* Cột Trái: Bảng */
+.project-panel {
+    width: 40%; border-right: 3px solid black;
+    display: flex; flex-direction: column;
+}
+
+.table-container {
+    flex-grow: 1; width: 100%; overflow-y: auto;
+    background: white; padding: 0;
+}
+
+.run-table { width: 100%; border-collapse: collapse; font-size: 1.2rem; }
+
+.run-table thead th {
+    background-color: #f2f2f2; color: #cc0000;
+    font-weight: bold; padding: 12px;
+    border-bottom: 3px solid black;
+    border-right: 1px solid #999;
+    text-align: center; position: sticky; top: 0;
+}
+.run-table thead th:last-child { border-right: none; }
+
+.run-table tbody td {
+    padding: 10px; text-align: center;
+    border-bottom: 1px solid #ccc;
+    font-weight: bold; color: #333;
+}
+.run-table tbody tr:nth-child(even) { background-color: #fafafa; }
+.run-table tbody tr:hover { background-color: #e0f7fa; }
+.text-code { color: #00b050; font-weight: 900; }
+
+/* Cột Phải: Ảnh */
+.image-panel {
+    width: 60%; display: flex; flex-direction: column;
+}
+
+.img-container {
+    flex-grow: 1; display: flex;
+    justify-content: center; align-items: center;
+    padding: 20px; background: #f9f9f9;
+}
+
+.machine-img {
+    max-width: 90%; max-height: 90%;
+    object-fit: contain;
+    border: 2px solid #333;
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+}
+
+/* COLORS */
+.text-red { color: #cc0000; font-weight: bold; }
+.text-green { color: #00b050; font-weight: bold; }
+.text-blue { color: #00b0f0; font-weight: bold; }

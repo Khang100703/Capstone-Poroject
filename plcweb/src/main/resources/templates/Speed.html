@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>EIU - Speed Monitoring (Realtime Control)</title>
+    <link rel="stylesheet" th:href="@{/speed.css}" />
+    <link rel="stylesheet" th:href="@{/homestyle.css}" />
+    
+    <style>
+        #resetZoomBtn {
+            position: absolute; top: 10px; right: 50px; z-index: 100;
+            padding: 5px 15px; background-color: #cc0000; color: white;
+            border: 2px solid white; border-radius: 20px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: none; animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(204, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(204, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(204, 0, 0, 0); }
+        }
+        .menu-item i { margin-right: 10px; width: 25px; text-align: center; }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+
+    <div class="app-wrapper">
+
+        <div class="sidebar">
+            <div class="user-profile">
+                <div class="avatar-circle"><i class="fas fa-user"></i></div>
+                <div class="user-info">
+                    <span class="greeting">Hi,</span>
+                    <span class="username" th:text="${username}">Guest</span>
+                </div>
+            </div>
+            <div class="sidebar-header"><h2 class="logo">MENU</h2></div>
+            <ul class="menu">
+                <li><a th:href="@{/Dashboard}" class="menu-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li class="active"><a th:href="@{/speed-monitoring}" class="menu-item"><i class="fas fa-chart-line"></i> Speed Monitoring</a></li>
+                <li><a th:href="@{/torque}" class="menu-item"><i class="fas fa-cogs"></i> Torque Control</a></li>
+                <li><a th:href="@{/recipes}" class="menu-item"><i class="fas fa-clipboard-list"></i> Recipes</a></li>
+                <li><a th:href="@{/reports}" class="menu-item"><i class="fas fa-file-alt"></i> Reports</a></li>
+                <li><a th:href="@{/invt}" class="menu-item"><i class="fas fa-sliders-h"></i> INVT Parameters</a></li>
+                <li><a href="/IO-status" class="menu-item"><i class="fas fa-network-wired"></i> I/O Status</a></li>
+            </ul>
+             <div class="logout-container">
+                <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> LOG OUT</a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="hmi-panel">
+
+                <div class="header">
+                    <div class="logo-area"><img th:src="@{/images/Logo_EIU.png}" alt="EIU" class="logo-img" /></div>
+                    <div class="title-area"><h1>DIGITALIZING LATHE MACHINE</h1></div>
+                </div>
+
+                <div class="top-dashboard">
+                    
+                    <div class="box-control">
+                        <div class="box-header text-red">Spindle Speed Control</div>
+                        <div class="box-body">
+                            <div class="input-row">
+                                <label>Setpoint (RPM):</label>
+                                <input type="number" id="setpoint" class="green-input" placeholder="Enter RPM..." onchange="sendSetpoint(this.value)" />
+                            </div>
+                            <div class="input-row">
+                                <label>Actual Speed:</label>
+                                <input type="text" id="actual-speed" value="0" class="green-input text-center" readonly="readonly" />
+                            </div>
+                            
+                            <div class="btn-group">
+                                <button class="btn start" onclick="sendControl('START')">START</button>
+                                <button class="btn stop" onclick="sendControl('STOP')">STOP</button>
+                                <button class="btn reset" onclick="sendControl('RESET')">RESET</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="box-pid">
+                        <div class="box-header text-red">Parameters & PID</div>
+                        <div class="box-body">
+                            <div class="info-row">
+                                <span>Power: <b id="val-power">0 W</b></span>
+                                <span>Temp: <b id="val-temp">0.0 °C</b></span>
+                            </div>
+                            <div class="pid-container">
+                                <div class="pid-item">
+                                    <label>Kp</label>
+                                    <input type="text" id="val-kp" value="0" class="green-input-small text-center" readonly />
+                                </div>
+                                <div class="pid-item">
+                                    <label>Ki</label>
+                                    <input type="text" id="val-ki" value="0" class="green-input-small text-center" readonly />
+                                </div>
+                                <div class="pid-item">
+                                    <label>Kd</label>
+                                    <input type="text" id="val-kd" value="0" class="green-input-small text-center" readonly />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="box-time text-red">
+                        <div>EIU <span id="clock-time">00:00:00</span></div>
+                        <div><span id="clock-ampm">AM</span></div>
+                        <div id="clock-date">01/01/2025</div>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <div class="chart-legend">
+                        <span class="text-green">■ Setpoint</span>
+                        <span class="text-red">■ Feedback</span>
+                        <span class="text-yellow" style="color: #FFD700; text-shadow: 1px 1px 1px black; margin-right: 20px;">■ Error</span>
+                        <small style="color: gray; font-style: italic;">(Scroll to zoom, Drag to pan)</small>
+                    </div>
+                    
+                    <div class="chart-container" style="position: relative;">
+                        <canvas id="pidChart"></canvas>
+                        <button id="resetZoomBtn" onclick="returnToLiveView()">▶ Go to Live View</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+    <script>
+        // --- 1. BIẾN TOÀN CỤC ---
+        let isLiveMode = true;
+
+        // --- 2. ĐỒNG HỒ ---
+        function updateClock() {
+            const now = new Date();
+            let h = now.getHours(), ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+            const timeStr = `${h}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            document.getElementById('clock-time').innerText = timeStr;
+            document.getElementById('clock-ampm').innerText = ampm;
+            document.getElementById('clock-date').innerText = now.toLocaleDateString('en-GB');
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        // --- 3. CẤU HÌNH BIỂU ĐỒ ---
+        const ctx = document.getElementById('pidChart').getContext('2d');
+        const gradientBg = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientBg.addColorStop(0, 'rgba(0, 176, 240, 0.5)'); 
+        gradientBg.addColorStop(1, 'rgba(0, 176, 240, 0.05)');
+
+        const pidChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'Setpoint', data: [], borderColor: '#00b050', borderWidth: 2, pointRadius: 0, tension: 0, fill: false },
+                    { label: 'Feedback', data: [], borderColor: '#cc0000', backgroundColor: gradientBg, borderWidth: 2, pointRadius: 0, tension: 0.4, fill: true },
+                    { label: 'Error', data: [], borderColor: '#FFD700', borderWidth: 1, borderDash: [5, 5], pointRadius: 0, tension: 0.1, fill: false }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, animation: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { title: { display: true, text: 'Time', color: 'black', font: {weight: 'bold'} }, ticks: { color: 'black', maxRotation: 0, autoSkip: true, maxTicksLimit: 10 }, grid: { color: 'rgba(0,0,0,0.1)' } },
+                    y: { title: { display: true, text: 'Speed (RPM)', color: 'black', font: {weight: 'bold'} }, min: 0, max: 2500, grid: { color: 'rgba(0,0,0,0.2)' } }
+                },
+                plugins: { 
+                    legend: { display: false },
+                    zoom: {
+                        pan: { enabled: true, mode: 'x', onPan: function() { isLiveMode = false; document.getElementById('resetZoomBtn').style.display = 'block'; } },
+                        zoom: { wheel: { enabled: false }, pinch: { enabled: true }, mode: 'x' },
+                        limits: { x: { min: 'original', max: 'original' } }
+                    }
+                }
+            }
+        });
+
+        function returnToLiveView() {
+            isLiveMode = true;
+            pidChart.resetZoom();
+            document.getElementById('resetZoomBtn').style.display = 'none';
+        }
+
+        // --- 4. GỬI LỆNH ĐIỀU KHIỂN ---
+        function sendSetpoint(val) {
+            if(!val) return;
+            fetch(`/api/control?cmd=SET_SPEED&val=${val}`, { method: 'POST' })
+                .catch(err => console.error(err));
+        }
+
+        function sendControl(cmd) {
+            fetch(`/api/control?cmd=${cmd}`, { method: 'POST' })
+                .then(res => res.text())
+                .then(data => console.log("Cmd sent:", cmd))
+                .catch(err => console.error(err));
+        }
+
+        // --- 5. LẤY DỮ LIỆU THỰC TẾ & VẼ BIỂU ĐỒ ---
+        function updateRealTimeData() {
+            fetch('/api/machine-data')
+                .then(response => response.json())
+                .then(data => {
+                    const now = new Date();
+                    const timeLabel = now.toLocaleTimeString('vi-VN', { hour12: false });
+
+                    // A. Đọc các Tag cơ bản
+                    const setPoint = data['Set Point'] || 0;
+                    const feedback = data['Spindle Speed'] || 0;
+                    const power = parseFloat(data['Output Power'] || 0).toFixed(1);
+                    const temp = parseFloat(data['Spindle Temperature'] || 0).toFixed(1);
+                    const error = setPoint - feedback;
+                    
+                   
+
+                    // --- B. CẬP NHẬT CÁC GIÁ TRỊ LÊN MÀN HÌNH ---
+                    document.getElementById('actual-speed').value = Math.round(feedback);
+                    document.getElementById('val-power').innerText = power + " W";
+                    document.getElementById('val-temp').innerText = temp + " °C";
+                    if(document.activeElement.id !== "setpoint"){
+                    document.getElementById('setpoint').value = setPoint;
+                        }
+                    // --- SYNC SETPOINT RPM TỪ PLC LÊN INPUT ---
+               
+
+
+
+                    // --- C. CẬP NHẬT KP, KI, KD (MỚI THÊM) ---
+                    // Kiểm tra null trước khi gán để tránh lỗi
+                    if(data['Kp'] !== undefined) document.getElementById('val-kp').value = data['Kp'];
+                    if(data['Ki'] !== undefined) document.getElementById('val-ki').value = data['Ki'];
+                    if(data['Kd'] !== undefined) document.getElementById('val-kd').value = data['Kd'];
+
+                    // --- D. VẼ BIỂU ĐỒ ---
+                    if (pidChart.data.labels.length > 600) { 
+                        pidChart.data.labels.shift();
+                        pidChart.data.datasets.forEach(ds => ds.data.shift());
+                    }
+
+                    pidChart.data.labels.push(timeLabel);
+                    pidChart.data.datasets[0].data.push(setPoint);
+                    pidChart.data.datasets[1].data.push(feedback);
+                    pidChart.data.datasets[2].data.push(error);
+
+                    if (isLiveMode) {
+                        pidChart.resetZoom(); 
+                        pidChart.update('none'); 
+                    } else {
+                        pidChart.update('none');
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        setInterval(updateRealTimeData, 1000);
+
+    </script>
+</body>
+</html>

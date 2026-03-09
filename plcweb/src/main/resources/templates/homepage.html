@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>EIU - Dashboard</title>
+    <link rel="stylesheet" href="homestyle.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        .menu-item i { margin-right: 10px; width: 25px; text-align: center; }
+        .fade-in { animation: fadeIn 1s; }
+        @keyframes fadeIn {
+            from { opacity: 0; background-color: #ffffcc; }
+            to { opacity: 1; background-color: transparent; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-wrapper">
+        <div class="sidebar">
+            <div class="user-profile">
+                <div class="avatar-circle"><i class="fas fa-user"></i></div>
+                <div class="user-info">
+                    <span class="greeting">Hi,</span>
+                    <span class="username" th:text="${username}">Guest</span>
+                </div>
+            </div>
+            <div class="sidebar-header"><h2 class="logo">MENU</h2></div>
+
+            <ul class="menu">
+                <li class="active"><a href="/Dashboard" class="menu-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="/speed-monitoring" class="menu-item"><i class="fas fa-chart-line"></i> Speed Monitoring</a></li>
+                <li><a href="/torque" class="menu-item"><i class="fas fa-cogs"></i> Torque Control</a></li>
+                <li><a href="/recipes" class="menu-item"><i class="fas fa-clipboard-list"></i> Recipes</a></li>
+                <li><a href="/reports" class="menu-item"><i class="fas fa-file-alt"></i> Reports</a></li>
+                <li><a href="/invt" class="menu-item"><i class="fas fa-sliders-h"></i> INVT Parameters</a></li>
+                <li><a href="/IO-status" class="menu-item"><i class="fas fa-network-wired"></i> I/O Status</a></li>
+                
+            </ul>
+
+            <div class="logout-container">
+                <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> LOG OUT</a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="hmi-panel">
+                <div class="header">
+                    <div class="logo-area"><img src="images/Logo_EIU.png" alt="EIU" class="logo-img"></div>
+                    <div class="title-area">
+                        <h1>DIGITALIZING LATHE MACHINE</h1>
+                        
+                    </div>
+                    <div class="header-time text-red">
+                        <div id="clock-line-1">EIU <span id="clock-time">00:00:00</span></div>
+                        <div id="clock-line-2"><span id="clock-ampm">AM</span></div>
+                        <div id="clock-line-3"><span id="clock-date">01/01/2025</span></div>
+                    </div>
+                </div>
+
+                <div class="dashboard-body">
+                    <div class="metrics-row">
+                        <div class="metric-box">
+                            <div class="box-header text-red">Spindle Speed</div>
+                            <div class="box-content">
+                                <span id="val-speed" class="value-large text-green">0</span> <span class="unit">RPM</span>
+                            </div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="box-header text-red">Spindle Torque</div>
+                            <div class="box-content">
+                                <span id="val-torque" class="value-large text-blue">0.0</span> <span class="unit">Nm</span>
+                            </div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="box-header text-red">Spindle Temperature</div>
+                            <div class="box-content">
+                                <span id="val-temp" class="value-large text-red">0.0</span> <span class="unit">°C</span>
+                            </div>
+                        </div>
+                        <div class="metric-box last-col">
+                            <div class="box-header text-red">Spindle Current</div>
+                            <div class="box-content">
+                                <span id="val-current" class="value-large">0.0</span> <span class="unit">A</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bottom-section">
+                        <div class="project-panel">
+                            <div class="box-header text-red">Production Log (Last 10 Runs)</div>
+                            <div class="table-container">
+                                <table class="run-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product Code</th>
+                                            <th>Start Time</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-body">
+                                        </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="image-panel">
+                            <div class="box-header text-red">Machine Image</div>
+                            <div class="img-container">
+                                <img src="images/picture1.jpg" alt="Lathe Machine" class="machine-img">
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. CẤU HÌNH
+        const MAX_LOGS = 10; 
+
+        // 2. ĐỒNG HỒ
+        function updateClock() {
+            const now = new Date();
+            let h = now.getHours(); const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+            const timeStr = `${h}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            document.getElementById('clock-time').innerText = timeStr;
+            document.getElementById('clock-ampm').innerText = ampm;
+            document.getElementById('clock-date').innerText = now.toLocaleDateString('en-US');
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        // 3. KHỞI TẠO BẢNG & XỬ LÝ MÀU KHI TẢI TRANG
+        function initHistoryTable() {
+            const savedLogs = JSON.parse(localStorage.getItem('productionHistory')) || [];
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = ''; 
+
+            savedLogs.forEach((log, index) => {
+                const tr = document.createElement('tr');
+                
+                // --- LOGIC MÀU SẮC ---
+                // Nếu là dòng đầu tiên (index == 0) -> Màu Xanh (#00e676)
+                // Các dòng sau (index > 0) -> Màu Đỏ (#ff5252)
+                let colorStyle = (index === 0) ? 'color: #00e676;' : 'color: #ff5252;';
+                
+                tr.innerHTML = `
+                    <td style="${colorStyle} font-weight: bold;">${log.product}</td>
+                    <td>${log.time}</td>
+                    <td>${log.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        initHistoryTable(); 
+
+        // 4. LOGIC CẬP NHẬT DỮ LIỆU THỜI GIAN THỰC
+        let lastLoggedProduct = ""; 
+        const savedLogs = JSON.parse(localStorage.getItem('productionHistory')) || [];
+        if(savedLogs.length > 0) {
+            lastLoggedProduct = savedLogs[0].product; 
+        }
+
+        function updateRealTimeData() {
+            fetch('/api/machine-data')
+                .then(response => response.json())
+                .then(data => {
+                    // Update Metrics
+                    document.getElementById('val-speed').innerText = Math.round(data['Spindle Speed'] || 0);
+                    document.getElementById('val-torque').innerText = parseFloat(data['Output Torque'] || 0).toFixed(1);
+                    document.getElementById('val-temp').innerText = parseFloat(data['Spindle Temperature'] || 0).toFixed(1);
+                    document.getElementById('val-current').innerText = parseFloat(data['Output Current'] || 0).toFixed(1);
+
+                    // Logic Bảng
+                    const currentProduct = data.product_code || "WAITING...";
+                    const productDisplay = document.getElementById('val-product-code');
+                    if(productDisplay) productDisplay.innerText = currentProduct;
+
+                    if (currentProduct !== lastLoggedProduct && currentProduct !== "WAITING..." && currentProduct !== "LOADING...") {
+                        addLogToTable(currentProduct);
+                        lastLoggedProduct = currentProduct;
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // 5. HÀM THÊM DÒNG MỚI (QUAN TRỌNG: ĐỔI MÀU CŨ THÀNH ĐỎ)
+        function addLogToTable(productName) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('vi-VN');
+            const dateStr = now.toLocaleDateString('vi-VN');
+            const tbody = document.getElementById('table-body');
+
+            // --- BƯỚC A: ĐỔI MÀU DÒNG CŨ ĐẦU TIÊN THÀNH ĐỎ ---
+            // (Vì khi chèn dòng mới vào, dòng này sẽ bị đẩy xuống vị trí số 2 -> Cũ)
+            if (tbody.rows.length > 0) {
+                // tbody.rows[0] là dòng đầu tiên hiện tại
+                // .cells[0] là cột Product Code
+                tbody.rows[0].cells[0].style.color = '#ff5252'; // Đổi sang màu Đỏ
+            }
+
+            // --- BƯỚC B: TẠO DÒNG MỚI (MÀU XANH) ---
+            const tr = document.createElement('tr');
+            tr.className = "fade-in";
+            tr.innerHTML = `
+                <td style="color: #00e676; font-weight: bold;">${productName}</td>
+                <td>${timeStr}</td>
+                <td>${dateStr}</td>
+            `;
+            
+            // Chèn lên đầu bảng
+            tbody.insertBefore(tr, tbody.firstChild);
+
+            // Xóa dòng thừa nếu quá giới hạn
+            if (tbody.rows.length > MAX_LOGS) {
+                tbody.deleteRow(tbody.rows.length - 1);
+            }
+
+            // --- BƯỚC C: LƯU VÀO STORAGE ---
+            let logs = JSON.parse(localStorage.getItem('productionHistory')) || [];
+            logs.unshift({ product: productName, time: timeStr, date: dateStr });
+            if (logs.length > MAX_LOGS) logs = logs.slice(0, MAX_LOGS);
+            localStorage.setItem('productionHistory', JSON.stringify(logs));
+        }
+
+        setInterval(updateRealTimeData, 1000);
+    </script>
+
+    <script th:if="${error_msg}">
+        Swal.fire({
+            icon: 'error',
+            title: 'ACCESS DENIED',
+            text: '[[${error_msg}]]',
+            confirmButtonColor: '#cc0000',
+            confirmButtonText: 'CLOSE'
+        });
+    </script>
+
+</body>
+</html>

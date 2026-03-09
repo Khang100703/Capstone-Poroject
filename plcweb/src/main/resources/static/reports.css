@@ -1,0 +1,257 @@
+/* =========================================
+   1. CẤU HÌNH CHUNG
+   ========================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+
+body {
+    background-color: #dcdcdc;
+    height: 100vh; width: 100vw;
+    overflow: hidden;
+}
+
+.app-wrapper { display: flex; height: 100%; width: 100%; }
+
+/* =========================================
+   2. SIDEBAR & USER PROFILE (ĐÃ ĐỒNG BỘ)
+   ========================================= */
+.sidebar {
+    width: 230px; 
+    background-color: #2c3e50; 
+    height: 100vh;
+    
+    /* SỬA: Padding 0 để User Profile sát lề trên */
+    padding-top: 0; 
+    
+    position: fixed; top: 0; left: 0; z-index: 1000;
+    border-right: 1px solid #1a252f; 
+    flex-shrink: 0;
+    
+    /* SỬA: Flexbox để xếp dọc */
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- PHẦN HI USER (MỚI THÊM) --- */
+.user-profile {
+    display: flex;
+    align-items: center;
+    padding: 20px 15px;
+    background-color: #233240; /* Nền tối hơn sidebar */
+    border-bottom: 1px solid #444;
+    flex-shrink: 0;
+}
+
+.avatar-circle {
+    width: 45px; height: 45px;
+    background-color: #ecf0f1;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.avatar-circle i { font-size: 24px; color: #2c3e50; }
+
+.user-info { display: flex; flex-direction: column; }
+
+.greeting {
+    font-size: 13px; color: #bdc3c7;
+    font-style: italic; margin-bottom: 2px;
+}
+
+.username {
+    font-size: 16px; font-weight: 900;
+    color: #00b050; /* Màu xanh lá EIU */
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* --- HEADER MENU --- */
+.sidebar-header { 
+    padding: 15px 0; 
+    text-align: center; 
+    border-bottom: 1px solid #444; 
+    flex-shrink: 0;
+}
+.sidebar-header .logo { color: white; margin: 0; font-size: 24px; font-weight: bold; }
+
+/* --- DANH SÁCH MENU --- */
+.menu { 
+    list-style: none; 
+    padding-top: 10px; 
+    
+    /* SỬA: Đẩy nút logout xuống đáy */
+    flex-grow: 1; 
+    overflow-y: auto; 
+}
+
+.menu li a {
+    display: block; padding: 15px 20px; 
+    color: #bdc3c7; text-decoration: none;
+    font-size: 16px; transition: 0.3s; 
+    border-left: 5px solid transparent;
+}
+.menu li a:hover { background-color: #34495e; color: white; }
+.menu li.active a { 
+    background-color: #34495e; color: #00b050; 
+    border-left: 5px solid #00b050; font-weight: bold; 
+}
+
+/* --- NÚT LOGOUT --- */
+.logout-container {
+    padding: 20px;
+    background-color: #233240;
+    border-top: 1px solid #444;
+    flex-shrink: 0;
+}
+
+.logout-btn {
+    display: block; width: 100%; padding: 10px;
+    background-color: #c0392b; color: white;
+    text-align: center; text-decoration: none;
+    font-weight: bold; border-radius: 4px;
+    transition: 0.3s; font-size: 14px;
+}
+
+.logout-btn:hover { background-color: #e74c3c; }
+.logout-btn i { margin-right: 8px; }
+
+
+/* =========================================
+   3. MAIN CONTENT & HEADER
+   ========================================= */
+.main-content {
+    margin-left: 230px; width: calc(100% - 230px); height: 100vh;
+    background-color: #cfcfcf; padding: 0; overflow: hidden;
+    display: flex; flex-direction: column;
+}
+
+.hmi-panel {
+    width: 100%; height: 100%; background-color: white;
+    border-left: 2px solid #666; display: flex; flex-direction: column;
+}
+
+/* HEADER */
+.header {
+    display: flex; align-items: center; background-color: white;
+    border-bottom: 4px solid #cc0000; padding: 0 20px; height: 80px;
+    flex-shrink: 0; justify-content: space-between;
+}
+.logo-area { display: flex; align-items: center; width: 150px; }
+.logo-img { height: 55px; width: auto; }
+
+.title-area { flex-grow: 1; text-align: center; }
+.title-area h1 {
+    color: #00b050; font-weight: 900; text-transform: uppercase;
+    font-size: clamp(20px, 2.5vw, 32px); margin-bottom: 5px;
+}
+.sub-title { margin: 0; font-size: 20px; font-weight: bold; }
+.text-red { color: #cc0000; font-weight: bold; }
+
+/* Đồng hồ góc phải (Đồng bộ style 3 dòng) */
+.header-time {
+    display: flex; flex-direction: column; 
+    justify-content: center; align-items: center;
+    font-family: 'Arial', sans-serif; 
+    font-weight: 900; font-size: 1.2rem;
+    color: #cc0000; line-height: 1.2; 
+    width: 160px; text-align: center;
+}
+#clock-line-1 { font-size: 24px; }
+#clock-line-2 { font-size: 20px; margin: 2px 0; }
+#clock-line-3 { font-size: 24px; }
+
+
+/* =========================================
+   4. REPORT SECTION (GIỮ NGUYÊN)
+   ========================================= */
+.report-container {
+    flex-grow: 1; display: flex; flex-direction: column;
+    padding: 15px; background-color: #f0f0f0; overflow: hidden;
+}
+
+/* --- A. FILTER BAR --- */
+.filter-bar {
+    display: flex; align-items: flex-end;
+    background-color: white; padding: 15px 20px;
+    border: 2px solid #666; border-bottom: none;
+    gap: 30px; flex-shrink: 0;
+}
+
+.filter-group { display: flex; flex-direction: column; }
+.filter-group label {
+    font-weight: 900; font-size: 14px; margin-bottom: 8px;
+    color: #cc0000; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.hmi-input {
+    height: 45px; border: 3px solid #00b050; padding: 0 10px;
+    font-weight: bold; font-size: 16px; color: #333;
+    outline: none; background-color: #fff;
+    border-radius: 0; cursor: pointer; 
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+}
+.hmi-input:focus { background-color: #f0fff4; border-color: #008037; }
+
+/* NÚT BẤM */
+.btn-search, .btn-excel {
+    height: 45px; padding: 0 30px;
+    font-weight: 900; font-size: 14px; color: white;
+    border: 3px solid #333; cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+    transition: transform 0.1s;
+}
+.btn-search { background-color: #007bff; }
+.btn-excel { background-color: #28a745; }
+
+.btn-search:active, .btn-excel:active {
+    transform: translate(2px, 2px); box-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+}
+
+/* --- B. TABLE AREA --- */
+.table-wrapper {
+    flex-grow: 1; overflow: auto;
+    border: 2px solid #666; background-color: white;
+}
+
+.data-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+
+.data-table thead th {
+    position: sticky; top: 0; z-index: 1;
+    background-color: #e0e0e0; color: #cc0000;
+    border-bottom: 3px solid black; border-right: 1px solid #999;
+    padding: 15px; font-size: 14px;
+}
+
+.data-table tbody td {
+    padding: 10px; text-align: center;
+    border-bottom: 1px solid #ddd; border-right: 1px solid #eee;
+    font-size: 14px; font-weight: 500; color: #333;
+}
+
+.data-table tbody tr:nth-child(even) { background-color: #f9f9f9; }
+.data-table tbody tr:hover { background-color: #d1ecf1; }
+
+.badge {
+    display: inline-block; padding: 5px 12px;
+    border-radius: 4px; font-size: 12px; font-weight: bold; color: white;
+    min-width: 80px;
+}
+.status-run { background-color: #28a745; border: 1px solid darkgreen; }
+.status-alarm { background-color: #dc3545; border: 1px solid darkred; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0.6; } }
+
+/* --- C. PAGINATION --- */
+.pagination-bar {
+    background-color: white; padding: 10px 20px;
+    border: 2px solid #666; border-top: none;
+    display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+}
+.pagination-bar span { font-weight: bold; font-size: 14px; }
+
+.pages button {
+    padding: 6px 14px; margin-left: 5px;
+    border: 1px solid #ccc; background-color: white;
+    cursor: pointer; font-weight: bold;
+}
+.pages button.active { background-color: #00b050; color: white; border-color: #00b050; }

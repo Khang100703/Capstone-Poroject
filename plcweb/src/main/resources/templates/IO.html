@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>EIU - I/O Status</title>
+
+    <link rel="stylesheet" th:href="@{/IO.css}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <div class="sidebar">
+        <div class="user-profile">
+            <div class="avatar-circle"><i class="fas fa-user"></i></div>
+            <div class="user-info">
+                <span class="greeting">Hi,</span>
+                <span class="username" th:text="${session.user != null ? session.user : 'Guest'}">Guest</span>
+            </div>
+        </div>
+
+        <div class="sidebar-header"><h2 class="logo">MENU</h2></div>
+        <ul class="menu">
+            <li><a th:href="@{/Dashboard}" class="menu-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a th:href="@{/speed-monitoring}" class="menu-item"><i class="fas fa-chart-line"></i> Speed Monitor</a></li>
+            <li><a th:href="@{/torque}" class="menu-item"><i class="fas fa-cogs"></i> Torque Control</a></li>
+            <li><a th:href="@{/recipes}" class="menu-item"><i class="fas fa-clipboard-list"></i> Recipes</a></li>
+            <li><a th:href="@{/reports}" class="menu-item"><i class="fas fa-file-alt"></i> Reports</a></li>
+            <li><a th:href="@{/invt}" class="menu-item"><i class="fas fa-sliders-h"></i> INVT Parameters</a></li>
+            <li class="active"><a th:href="@{/IO-status}" class="menu-item"><i class="fas fa-network-wired"></i> I/O Status</a></li>
+        </ul>
+
+        <div class="logout-container">
+            <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> LOG OUT</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header-banner">
+            <div class="logo-box"><img th:src="@{/images/Logo_EIU.png}" alt="EIU Logo" /></div>
+            <div class="title-box">
+                <h1 class="main-title">DIGITALIZING LATHE MACHINE</h1>
+                <h2 class="sub-title">INPUT / OUTPUT STATUS MONITOR</h2>
+            </div>
+            <div class="header-time">
+                <div id="clock-line-1">EIU 12:00:00</div>
+                <div id="clock-line-2">AM</div>
+                <div id="clock-line-3">01/01/2026</div>
+            </div>
+        </div>
+
+        <div class="io-container">
+            <div class="io-header-row">
+                <div class="col-header">DIGITAL INPUTS (DI)</div>
+                <div class="col-header border-left">DIGITAL OUTPUTS (DO)</div>
+            </div>
+
+            <div class="io-body-row">
+                <div class="io-column">
+                    <div class="io-item"><span class="tag-addr">DI_06</span><span class="tag-name">Button Forward</span><div id="lamp-btn-fwd" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DI_07</span><span class="tag-name">Button Reverse</span><div id="lamp-btn-rev" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DI_08</span><span class="tag-name">Power Start Button</span><div id="lamp-pwr-on" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DI_09</span><span class="tag-name">Power Stop Button</span><div id="lamp-pwr-off" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DI_10</span><span class="tag-name">Brake</span><div id="lamp-pedal" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DI_11</span><span class="tag-name">EMERGENCY STOP</span><div id="lamp-estop" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DI_12</span><span class="tag-name">Invt Run</span><div id="lamp-vfd-rdy" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DI_13</span><span class="tag-name">Invt Error</span><div id="lamp-vfd-err" class="lamp lamp-red"></div></div>
+                </div>
+
+                <div class="io-column border-left-col">
+                    <div class="io-item"><span class="tag-addr">DO_02</span><span class="tag-name">Run Forward</span><div id="lamp-run-fwd" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DO_03</span><span class="tag-name">Run Reverse</span><div id="lamp-run-rev" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DO_04</span><span class="tag-name">Stop</span><div id="lamp-motor-stop" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DO_05</span><span class="tag-name">Buzzer</span><div id="lamp-buzzer" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DO_06</span><span class="tag-name">Power Start</span><div id="lamp-sys-on" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DO_07</span><span class="tag-name">Red Light</span><div id="lamp-light-red" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DO_08</span><span class="tag-name">Yellow Light</span><div id="lamp-light-yellow" class="lamp lamp-red"></div></div>
+                    <div class="io-item"><span class="tag-addr">DO_09</span><span class="tag-name">Green Light</span><div id="lamp-light-green" class="lamp lamp-red"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CLOCK -->
+<script>
+function updateClock(){
+    const now=new Date();
+    let h=now.getHours();
+    const ampm=h>=12?'PM':'AM';
+    h=h%12||12;
+    const m=String(now.getMinutes()).padStart(2,'0');
+    const s=String(now.getSeconds()).padStart(2,'0');
+    const d=now.toLocaleDateString('en-US',{year:'numeric',month:'2-digit',day:'2-digit'});
+    document.getElementById('clock-line-1').innerText=`EIU ${h}:${m}:${s}`;
+    document.getElementById('clock-line-2').innerText=ampm;
+    document.getElementById('clock-line-3').innerText=d;
+}
+setInterval(updateClock,1000); updateClock();
+</script>
+
+<!-- IO STATUS -->
+<script>
+const ioMap={
+    "Button Forward":"lamp-btn-fwd",
+    "Button Reverse":"lamp-btn-rev",
+    "Power Start Button":"lamp-pwr-on",
+    "Power Stop Button":"lamp-pwr-off",
+    "Brake":"lamp-pedal",
+    "EMO":"lamp-estop",
+    "Invt Run":"lamp-vfd-rdy",
+    "Invt Error":"lamp-vfd-err",
+
+    " Run Forward":"lamp-run-fwd",
+    " Run Reverse":"lamp-run-rev",
+    " Stop":"lamp-motor-stop",
+    " Buzzer":"lamp-buzzer",
+    "Power Start":"lamp-sys-on",
+    "Red Light":"lamp-light-red",
+    "Yellow Light":"lamp-light-yellow",
+    "Green Light":"lamp-light-green"
+};
+
+const invertedSignals=["EMO","Power Stop Button"];
+
+function updateIOStatus(){
+    fetch('/api/machine-data')
+    .then(r=>r.json())
+    .then(data=>{
+        for(const [tag,id] of Object.entries(ioMap)){
+            const lamp=document.getElementById(id);
+            if(!lamp) continue;
+
+            let val=data[tag];
+
+            if(val===undefined||val===null){
+                lamp.className="lamp lamp-red";
+                continue;
+            }
+
+            let isOn=(val===true||val===1||val==="true");
+
+            if(invertedSignals.includes(tag)){
+                isOn=!isOn;
+            }
+
+            lamp.className=isOn?"lamp lamp-green":"lamp lamp-red";
+        }
+    })
+    .catch(err=>{
+        console.error("PLC disconnected:",err);
+        for(const id of Object.values(ioMap)){
+            const lamp=document.getElementById(id);
+            if(lamp) lamp.className="lamp lamp-red";
+        }
+    });
+}
+setInterval(updateIOStatus,500);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,210 @@
+/* =========================================
+   1. CẤU HÌNH CHUNG
+   ========================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+
+body { 
+    background: #dcdcdc; 
+    height: 100vh; 
+    width: 100vw; 
+    overflow: hidden; 
+}
+
+.app-wrapper { display: flex; height: 100%; width: 100%; }
+
+/* =========================================
+   2. SIDEBAR & USER PROFILE (ĐÃ ĐỒNG BỘ)
+   ========================================= */
+.sidebar {
+    width: 230px; 
+    background: #2c3e50; 
+    height: 100vh; 
+    
+    /* SỬA: Padding 0 để User profile sát lề trên */
+    padding-top: 0; 
+    
+    position: fixed; top: 0; left: 0; z-index: 10; 
+    border-right: 1px solid #1a252f;
+    
+    /* SỬA: Flexbox để xếp dọc và đẩy Logout xuống đáy */
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- PHẦN HI USER (MỚI) --- */
+.user-profile {
+    display: flex;
+    align-items: center;
+    padding: 20px 15px;
+    background-color: #233240; /* Nền tối nổi bật */
+    border-bottom: 1px solid #444;
+    flex-shrink: 0;
+}
+
+.avatar-circle {
+    width: 45px; height: 45px;
+    background-color: #ecf0f1;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.avatar-circle i { font-size: 24px; color: #2c3e50; }
+
+.user-info { display: flex; flex-direction: column; }
+
+.greeting {
+    font-size: 13px; color: #bdc3c7;
+    font-style: italic; margin-bottom: 2px;
+}
+
+.username {
+    font-size: 16px; font-weight: 900;
+    color: #00b050; /* Màu xanh lá EIU */
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* --- HEADER CỦA MENU --- */
+.sidebar-header { 
+    padding: 15px 0; 
+    text-align: center; 
+    border-bottom: 1px solid #444; 
+    flex-shrink: 0; 
+}
+.sidebar-header .logo { color: white; margin: 0; }
+
+/* --- DANH SÁCH MENU --- */
+.menu { 
+    list-style: none; 
+    padding-top: 10px; 
+    flex-grow: 1; /* Đẩy logout xuống đáy */
+    overflow-y: auto; 
+}
+
+.menu li a {
+    display: block; padding: 15px 20px; 
+    color: #bdc3c7; text-decoration: none;
+    font-size: 16px; transition: 0.3s; 
+    border-left: 5px solid transparent;
+}
+.menu li a:hover { background: #34495e; color: white; }
+.menu li.active a { 
+    background: #34495e; color: #00b050; 
+    border-left: 5px solid #00b050; font-weight: bold; 
+}
+
+/* --- NÚT LOGOUT --- */
+.logout-container {
+    padding: 20px;
+    background-color: #233240;
+    border-top: 1px solid #444;
+    flex-shrink: 0;
+}
+
+.logout-btn {
+    display: block; width: 100%; padding: 10px;
+    background-color: #c0392b; color: white;
+    text-align: center; text-decoration: none;
+    font-weight: bold; border-radius: 4px;
+    transition: 0.3s; font-size: 14px;
+}
+.logout-btn:hover { background-color: #e74c3c; }
+.logout-btn i { margin-right: 8px; }
+
+
+/* =========================================
+   3. MAIN CONTENT & HEADER
+   ========================================= */
+.main-content {
+    margin-left: 230px; width: calc(100% - 230px); height: 100vh;
+    background: #cfcfcf; padding: 0; overflow: hidden;
+}
+
+.hmi-panel {
+    width: 100%; height: 100%; background: white;
+    border-left: 2px solid #666; display: flex; flex-direction: column;
+}
+
+/* HEADER */
+.header {
+    display: flex; align-items: center; justify-content: space-between;
+    background: white; border-bottom: 4px solid #cc0000; 
+    padding: 0 15px; height: 85px; flex-shrink: 0;
+}
+
+.logo-area { display: flex; align-items: center; width: 150px; }
+.logo-img { height: 60px; width: auto; }
+
+.title-area { flex-grow: 1; text-align: center; }
+.title-area h1 { 
+    color: #00b050; font-weight: 900; 
+    text-transform: uppercase; font-size: 28px; margin-bottom: 5px;
+}
+.sub-title { margin: 0; font-size: 22px; font-weight: bold; color: #cc0000; }
+
+/* Đồng hồ góc phải (Đồng bộ style 3 dòng) */
+.header-time {
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    font-weight: 900; font-size: 1.2rem;
+    color: #cc0000; line-height: 1.2;
+    width: 160px; text-align: center;
+    font-family: Arial, sans-serif;
+}
+#clock-line-1 { font-size: 24px; }
+#clock-line-2 { font-size: 20px; margin: 2px 0; }
+#clock-line-3 { font-size: 24px; }
+
+
+/* =========================================
+   4. INVT GRID LAYOUT (GIỮ NGUYÊN)
+   ========================================= */
+.invt-grid {
+    flex-grow: 1; padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); 
+    grid-template-rows: repeat(2, 1fr);
+    gap: 20px; overflow: auto;
+}
+
+.gauge-card {
+    background: #f9f9f9;
+    border: 2px solid #444;
+    border-radius: 5px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 10px;
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.1);
+}
+
+/* SVG GAUGE DESIGN */
+.gauge-wrapper {
+    position: relative; width: 80%; max-width: 250px;
+}
+
+.gauge-svg { width: 100%; height: auto; display: block; }
+
+.bg-arc {
+    fill: none; stroke: #e0e0e0;
+    stroke-width: 12; stroke-linecap: round;
+}
+
+.val-arc {
+    fill: none; stroke: #00e676;
+    stroke-width: 12; stroke-linecap: round;
+    stroke-dasharray: 125.6; 
+    stroke-dashoffset: 125.6;
+    transition: stroke-dashoffset 0.5s ease-out;
+}
+
+.gauge-val {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    text-align: center; font-size: 2.2rem;
+    font-weight: bold; color: #333;
+}
+
+.gauge-label {
+    margin-top: 15px; font-weight: bold;
+    font-size: 1.2rem; color: black; text-align: center;
+}

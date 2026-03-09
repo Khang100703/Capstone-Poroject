@@ -1,0 +1,1 @@
+package com; import java.time.LocalDateTime; import org.springframework.data.jpa.repository.JpaRepository; import org.springframework.stereotype.Repository; import java.util.List; @Repository public interface MachineLogRepository extends JpaRepository<MachineLog, Long> { List<MachineLog> findByRecordedAtBetween(LocalDateTime start, LocalDateTime end);}

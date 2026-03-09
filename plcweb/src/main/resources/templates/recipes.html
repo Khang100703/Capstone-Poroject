@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>EIU - Recipe Management</title>
+    <link rel="stylesheet" th:href="@{/recipes.css}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <div class="app-wrapper">
+
+        <div class="sidebar">
+            <div class="user-profile">
+                <div class="avatar-circle">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-info">
+                    <span class="greeting">Hi,</span>
+                    <span class="username" th:text="${username}">Guest</span>
+                </div>
+            </div>
+            <div class="sidebar-header">
+                <h2 class="logo">MENU</h2>
+            </div>
+            <ul class="menu">
+                <li><a th:href="@{/Dashboard}" class="menu-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a th:href="@{/speed-monitoring}" class="menu-item"><i class="fas fa-chart-line"></i> Speed Monitoring</a></li>
+                <li><a th:href="@{/torque}" class="menu-item"><i class="fas fa-cogs"></i> Torque Control</a></li>
+                <li class="active"><a th:href="@{/recipes}" class="menu-item"><i class="fas fa-clipboard-list"></i> Recipes</a></li>
+                <li><a th:href="@{/reports}" class="menu-item"><i class="fas fa-file-alt"></i> Reports</a></li>
+                <li><a th:href="@{/invt}" class="menu-item"><i class="fas fa-sliders-h"></i> INVT Parameters</a></li>
+                <li><a href="/IO-status" class="menu-item"><i class="fas fa-network-wired"></i> I/O Status</a></li>
+            </ul>
+            <div class="logout-container">
+                <a href="/logout" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> LOG OUT
+                </a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="hmi-panel">
+
+                <div class="header">
+                    <div class="logo-area">
+                        <img th:src="@{/images/Logo_EIU.png}" alt="EIU" class="logo-img" />
+                    </div>
+                    <div class="title-area">
+                        <h1>DIGITALIZING LATHE MACHINE</h1>
+                        <h2 class="sub-title text-red">RECIPE MANAGEMENT</h2>
+                    </div>
+                    <div class="header-time text-red">
+                        <div>EIU <span id="clock-time">00:00:00</span></div>
+                        <div><span id="clock-ampm">AM</span></div>
+                        <div id="clock-date">01/01/2025</div>
+                    </div>
+                </div>
+
+                <div class="recipe-container">
+                    
+                    <div class="recipe-list-panel">
+                        <div class="panel-header">SELECT MATERIAL (PHÔI)</div>
+                        <div class="list-wrapper" id="recipeList">
+                            </div>
+                        <div class="list-actions">
+                            <button class="btn-new" onclick="createNewRecipe()">+ NEW RECIPE</button>
+                        </div>
+                    </div>
+
+                    <div class="recipe-detail-panel">
+                        <div class="panel-header">PARAMETER SETTINGS</div>
+                        
+                        <div class="form-container">
+                            <input type="hidden" id="recipe-id">
+
+                            <div class="form-group full-width">
+                                <label>Recipe Name / Material Type:</label>
+                                <input type="text" id="recipe-name" class="hmi-input" placeholder="Enter name...">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Target Speed (RPM):</label>
+                                    <input type="number" id="recipe-speed" class="hmi-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>Max Torque (Nm):</label>
+                                    <input type="number" id="recipe-torque" class="hmi-input">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Acceleration Time (s):</label>
+                                    <input type="number" id="recipe-accel" class="hmi-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>Cycle Time Estimate (s):</label>
+                                    <input type="number" id="recipe-cycle" class="hmi-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-bar">
+                            <div class="left-btns">
+                                <button class="btn-save" onclick="saveRecipe()">SAVE</button>
+                                <button class="btn-delete" onclick="deleteRecipe()">DELETE</button>
+                            </div>
+                            
+                            <button class="btn-load" onclick="loadToPlc()">
+                                ⚡ LOAD TO MACHINE
+                            </button>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/recipes'; // Đường dẫn tới Controller Java
+        let recipes = [];       // Biến chứa dữ liệu tải về
+        let selectedId = null;  // ID đang được chọn
+
+        // ===============================================
+        // 1. TẢI DANH SÁCH TỪ MYSQL (Khi mới vào trang)
+        // ===============================================
+        function loadRecipesFromServer() {
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    recipes = data; // Lưu dữ liệu vào biến
+                    renderList();   // Vẽ lên màn hình
+                    
+                    // Nếu danh sách không rỗng và chưa chọn gì, chọn cái đầu tiên
+                    if (recipes.length > 0 && !selectedId) {
+                        selectRecipe(recipes[0].id);
+                    } else if (recipes.length === 0) {
+                        createNewRecipe(); // Nếu rỗng thì xóa trắng form
+                    }
+                })
+                .catch(err => console.error("Lỗi tải danh sách:", err));
+        }
+
+        // ===============================================
+        // 2. VẼ DANH SÁCH BÊN TRÁI
+        // ===============================================
+        function renderList() {
+            const container = document.getElementById('recipeList');
+            container.innerHTML = ''; // Xóa danh sách cũ
+
+            recipes.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `recipe-item ${item.id === selectedId ? 'active' : ''}`;
+                div.innerText = item.name;
+                div.onclick = () => selectRecipe(item.id);
+                container.appendChild(div);
+            });
+        }
+
+        // ===============================================
+        // 3. CHỌN 1 CÔNG THỨC -> ĐỔ RA FORM
+        // ===============================================
+        function selectRecipe(id) {
+            selectedId = id;
+            const item = recipes.find(r => r.id === id);
+            
+            if (item) {
+                document.getElementById('recipe-id').value = item.id;
+                document.getElementById('recipe-name').value = item.name;
+                document.getElementById('recipe-speed').value = item.speed;
+                document.getElementById('recipe-torque').value = item.torque;
+                document.getElementById('recipe-accel').value = item.accel;
+                document.getElementById('recipe-cycle').value = item.cycle;
+            }
+            renderList(); // Cập nhật màu highlight
+        }
+
+        // ===============================================
+        // 4. LƯU (SAVE) -> GỬI VỀ DATABASE
+        // ===============================================
+        function saveRecipe() {
+            // Lấy dữ liệu từ ô nhập
+            const recipeData = {
+                id: document.getElementById('recipe-id').value || null, // Nếu rỗng là thêm mới
+                name: document.getElementById('recipe-name').value,
+                speed: parseFloat(document.getElementById('recipe-speed').value),
+                torque: parseFloat(document.getElementById('recipe-torque').value),
+                accel: parseFloat(document.getElementById('recipe-accel').value),
+                cycle: parseFloat(document.getElementById('recipe-cycle').value)
+            };
+
+            // Kiểm tra dữ liệu cơ bản
+            if (!recipeData.name) {
+                Swal.fire('Warning', 'Please enter a recipe name!', 'warning');
+                return;
+            }
+
+            // Gửi API
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(recipeData)
+            })
+            .then(res => res.json())
+            .then(savedItem => {
+                Swal.fire('Saved!', 'Recipe saved successfully.', 'success');
+                selectedId = savedItem.id; // Cập nhật ID mới nếu là thêm mới
+                loadRecipesFromServer();   // Tải lại danh sách
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Error', 'Error saving recipe!', 'error');
+            });
+        }
+
+        // ===============================================
+        // 5. XÓA (DELETE) -> XÓA KHỎI DATABASE
+        // ===============================================
+        function deleteRecipe() {
+            if (!selectedId) return;
+            
+            Swal.fire({
+                title: 'Delete Recipe?',
+                text: "Are you sure you want to delete this recipe?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Delete Now'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`${API_URL}/${selectedId}`, { method: 'DELETE' })
+                    .then(() => {
+                        Swal.fire('Deleted!', 'Recipe deleted successfully.', 'success');
+                        selectedId = null;
+                        createNewRecipe();
+                        loadRecipesFromServer();
+                    })
+                    .catch(err => Swal.fire('Error', 'Error deleting recipe!', 'error'));
+                }
+            });
+        }
+
+        // ===============================================
+        // 6. LOAD TO MACHINE -> GỬI XUỐNG PLC
+        // ===============================================
+        function loadToPlc() {
+            if (!selectedId) {
+                Swal.fire('Warning', 'Please select a recipe first!', 'warning');
+                return;
+            }
+
+            // Hiệu ứng nút bấm
+            const btn = document.querySelector('.btn-load');
+            const originalText = btn.innerText;
+            btn.innerText = "SENDING...";
+            btn.style.backgroundColor = "#e67e22";
+            btn.disabled = true;
+
+            // Gọi API
+            fetch(`${API_URL}/load/${selectedId}`, { method: 'POST' })
+            .then(res => res.text())
+            .then(response => {
+                if (response === "OK") {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'LOAD SUCCESS',
+                        text: 'Successfully loaded speed and torque to machine!',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire('Error', 'Error sending to PLC: ' + response, 'error');
+                }
+            })
+            .catch(err => Swal.fire('Error', 'Error connecting to server', 'error'))
+            .finally(() => {
+                // Trả lại trạng thái nút
+                btn.innerText = originalText;
+                btn.style.backgroundColor = "#00b050"; 
+                btn.disabled = false;
+            });
+        }
+
+        // ===============================================
+        // 7. TẠO MỚI (XÓA TRẮNG FORM)
+        // ===============================================
+        function createNewRecipe() {
+            selectedId = null;
+            document.getElementById('recipe-id').value = "";
+            document.getElementById('recipe-name').value = "";
+            document.getElementById('recipe-speed').value = "";
+            document.getElementById('recipe-torque').value = "";
+            document.getElementById('recipe-accel').value = "";
+            document.getElementById('recipe-cycle').value = "";
+            renderList();
+            document.getElementById('recipe-name').focus();
+        }
+
+        // --- KHỞI CHẠY LẦN ĐẦU ---
+        loadRecipesFromServer();
+
+        // --- ĐỒNG HỒ ---
+        function updateClock() {
+            const now = new Date();
+            let h = now.getHours(); const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock-time').innerText = `${h}:${m}:${s}`;
+            document.getElementById('clock-ampm').innerText = ampm;
+            document.getElementById('clock-date').innerText = now.toLocaleDateString('en-US');
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+    </script>
+
+    <script th:if="${error_msg}">
+        Swal.fire({
+            icon: 'error',
+            title: 'ACCESS DENIED',
+            text: '[[${error_msg}]]',
+            confirmButtonColor: '#cc0000',
+            confirmButtonText: 'CLOSE'
+        });
+    </script>
+
+</body>
+</html>

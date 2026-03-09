@@ -1,0 +1,219 @@
+/* =========================================
+   1. CẤU HÌNH CHUNG
+   ========================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+
+body { 
+    background: white; 
+    height: 100vh; 
+    width: 100vw; 
+    overflow: hidden; 
+}
+
+.app-wrapper { display: flex; height: 100%; width: 100%; }
+
+
+/* =========================================
+   2. SIDEBAR & USER PROFILE (ĐÃ CHỈNH SỬA)
+   ========================================= */
+.sidebar { 
+    width: 230px; 
+    background: #2c3e50; 
+    height: 100vh; 
+    
+    /* SỬA: Padding 0 để User Profile nằm sát trên */
+    padding-top: 0; 
+    
+    position: fixed; 
+    border-right: 1px solid #1a252f; 
+    z-index: 1000; 
+    
+    /* SỬA: Flexbox để xếp dọc và đẩy logout xuống đáy */
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- PHẦN HI USER (MỚI THÊM) --- */
+.user-profile {
+    display: flex;
+    align-items: center;
+    padding: 20px 15px;
+    background-color: #233240; /* Nền tối hơn sidebar */
+    border-bottom: 1px solid #444;
+    flex-shrink: 0;
+}
+
+.avatar-circle {
+    width: 45px; height: 45px;
+    background-color: #ecf0f1;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.avatar-circle i { font-size: 24px; color: #2c3e50; }
+
+.user-info { display: flex; flex-direction: column; }
+
+.greeting {
+    font-size: 13px; color: #bdc3c7;
+    font-style: italic; margin-bottom: 2px;
+}
+
+.username {
+    font-size: 16px; font-weight: 900;
+    color: #00b050; /* Màu xanh lá EIU */
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* --- HEADER MENU --- */
+.sidebar-header { 
+    padding: 15px 0; 
+    text-align: center; 
+    border-bottom: 1px solid #444; 
+    flex-shrink: 0;
+}
+.sidebar-header .logo { color: white; font-size: 24px; font-weight: bold; }
+
+/* --- MENU LIST --- */
+.menu { 
+    list-style: none; 
+    padding-top: 10px; 
+    
+    /* SỬA: Đẩy nút logout xuống đáy */
+    flex-grow: 1; 
+    overflow-y: auto; 
+}
+
+.menu li a { 
+    display: block; padding: 15px 20px; 
+    color: #bdc3c7; text-decoration: none; 
+    font-size: 16px; transition: 0.3s; 
+    border-left: 5px solid transparent; 
+}
+.menu li a:hover { background: #34495e; color: white; }
+.menu li.active a { 
+    background: #34495e; color: #00b050; 
+    border-left: 5px solid #00b050; font-weight: bold; 
+}
+
+/* --- NÚT LOGOUT --- */
+.logout-container {
+    padding: 20px;
+    background-color: #233240;
+    border-top: 1px solid #444;
+    flex-shrink: 0;
+}
+
+.logout-btn {
+    display: block; width: 100%; padding: 10px;
+    background-color: #c0392b; color: white;
+    text-align: center; text-decoration: none;
+    font-weight: bold; border-radius: 4px;
+    transition: 0.3s; font-size: 14px;
+}
+
+.logout-btn:hover { background-color: #e74c3c; }
+.logout-btn i { margin-right: 8px; }
+
+
+/* =========================================
+   3. MAIN CONTENT & HEADER (GIỮ NGUYÊN)
+   ========================================= */
+.main-content { 
+    margin-left: 230px; 
+    width: calc(100% - 230px); 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    background-color: #f4f4f4; 
+}
+
+/* HEADER BANNER */
+.header-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 4px solid #cc0000;
+    padding: 10px 25px; background: white; height: 90px; flex-shrink: 0;
+}
+
+.logo-box img { height: 60px; width: auto; }
+
+.title-box { text-align: center; flex-grow: 1; }
+.main-title { color: #00b050; font-weight: 900; font-size: 26px; text-transform: uppercase; margin-bottom: 5px; }
+.sub-title { color: #cc0000; font-weight: bold; font-size: 18px; text-transform: uppercase; margin: 0; }
+
+/* Style Đồng hồ góc phải */
+.header-clock { text-align: right; min-width: 140px; }
+.time-label { font-size: 12px; font-weight: bold; color: #333; margin-bottom: 2px; }
+#clock-time { font-size: 26px; font-weight: 900; color: #cc0000; line-height: 1; margin-bottom: 2px; }
+#clock-date { font-size: 16px; font-weight: bold; color: #cc0000; }
+
+/* Đồng hồ format mới (nếu dùng structure mới) */
+.header-time {
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    font-family: 'Arial', sans-serif; color: #cc0000; font-weight: 900;
+    min-width: 170px; text-align: center; line-height: 1.2; margin-right: 15px;
+}
+#clock-line-1 { font-size: 18px; }
+#clock-line-2 { font-size: 18px; margin: 2px 0; }
+#clock-line-3 { font-size: 18px; }
+
+
+/* =========================================
+   4. IO CONTAINER & LAMPS (GIỮ NGUYÊN)
+   ========================================= */
+.io-container {
+    flex-grow: 1; margin: 20px;
+    border: 3px solid #333; background: white;
+    display: flex; flex-direction: column;
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.1);
+}
+
+.io-header-row {
+    display: flex; background-color: #2c3e50; color: white;
+    border-bottom: 3px solid #333;
+}
+.col-header {
+    width: 50%; text-align: center; padding: 12px;
+    font-size: 20px; font-weight: 900; text-transform: uppercase;
+}
+.border-left { border-left: 2px solid white; }
+
+.io-body-row { display: flex; flex-grow: 1; overflow-y: auto; }
+.io-column { width: 50%; padding: 15px; }
+.border-left-col { border-left: 2px solid #999; }
+
+.io-item {
+    display: flex; align-items: center; background: white;
+    border: 1px solid #ccc; border-radius: 4px;
+    margin-bottom: 10px; padding: 8px 12px; height: 50px;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.05);
+}
+.bg-highlight { background-color: #fff0f0; border-color: #ffcccc; }
+
+.tag-addr {
+    background: #e0e0e0; padding: 5px 10px; font-weight: bold;
+    border-radius: 3px; border: 1px solid #999;
+    margin-right: 15px; font-size: 16px; color: #333;
+    min-width: 65px; text-align: center;
+}
+
+.tag-name {
+    flex-grow: 1; font-size: 16px; font-weight: 600;
+    color: #333; text-transform: uppercase;
+}
+.font-bold { font-weight: 900; }
+.text-red { color: #cc0000; }
+
+/* ĐÈN BÁO */
+.lamp {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid #666; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
+}
+.lamp-black { background-color: #222; border-color: #000; }
+.lamp-red { background-color: #cc0000; border-color: #8b0000; box-shadow: 0 0 5px #cc0000; }
+.lamp-green {
+    background-color: #00e600; border-color: #006400;
+    box-shadow: 0 0 10px #00e600, inset 2px 2px 5px rgba(255,255,255,0.4);
+}
