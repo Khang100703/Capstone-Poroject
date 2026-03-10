@@ -61,7 +61,8 @@ public class MachineData {
                 "HMI Stop",
                 "Start HMI",
                 "Reset HMI",
-                "Set Point"
+                "Set Point",
+                "Setting Frequency"
         );
 
         Map<String, Object> data = opcService.readListTags(tagsToRead);
